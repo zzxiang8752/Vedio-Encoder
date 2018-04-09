@@ -112,8 +112,8 @@ public class JPEGCompression {
 		int sizeX = f.length;
 	    int sizeY = f[0].length;
 	    double[][][][] F = new double[sizeX][sizeY][8][8];
-	    System.out.println("sizeX "+ sizeX);
-	    System.out.println("sizeY "+ sizeY);
+//	    System.out.println("sizeX "+ sizeX);
+//	    System.out.println("sizeY "+ sizeY);
 	    for(int yy = 0;yy<sizeX;yy += 8) {
 	    		for(int xx = 0;xx <sizeY; xx += 8) {
 	    			for(int u1 = 0; u1 < 8;u1++) {
@@ -158,7 +158,7 @@ public class JPEGCompression {
 	     System.out.println("");
 	 }
 	
-	public static void printArray2D(int[][] F){
+	public static void printArray2D(double[][] F){
 		// a test function to print 2D-array
 	      int X = F.length;
 	      int Y = F[0].length;
@@ -210,6 +210,17 @@ public class JPEGCompression {
         } 
         return linearBlockData; 
     }
+	
+	
+		int[] ZIGZAG_ORDER = 
+			  { 0,  1,  8,  16,  9,  2,  3, 10, 
+                17, 24, 32, 25, 18, 11,  4,  5, 
+                12, 19, 26, 33, 40, 48, 41, 34, 
+                27, 20, 13,  6,  7, 14, 21, 28, 
+                35, 42, 49, 56, 57, 50, 43, 36, 
+                29, 22, 15, 23, 30, 37, 44, 51, 
+                58, 59, 52, 45, 38, 31, 39, 46, 
+                53, 60, 61, 54, 47, 55, 62, 63};
 	 
 	
 	public static void main(String args[])throws IOException{
@@ -220,26 +231,56 @@ public class JPEGCompression {
         int minx = bi.getMinX();
         int miny = bi.getMinY();
 //        int size = (Math.max(width, height)/8 + 1)*8;
-//        System.out.println("width=" + width + ",height=" + height + ".");
-//        System.out.println("minx=" + minx + ",miniy=" + miny + ".");
+        
+        //the width and height of picture
+        System.out.println("width=" + width + ",height=" + height + ".");
+        System.out.println("minx=" + minx + ",miniy=" + miny + ".");
+        
         double[][][] rgbimage = getRGBPixel(bi);
+        // print the rgbmatrix
+        for(int i = 0;i<256;i++) {
+        		for(int j = 0;j<256;j++) {
+        			System.out.print("rgbimage["+i+"]["+j+"]"+" R: "+rgbimage[i][j][0]+" G: "+rgbimage[i][j][1] +" B: "+rgbimage[i][j][0]);
+        		}
+        		System.out.println("");
+        }
+        
         double[][][] yuvimage = transform(rgbimage,width,height,minx,miny);
+        //print the yuv matrix
+        for(int i = 0;i<256;i++) {
+    		for(int j = 0;j<256;j++) {
+    			System.out.print("yuvimage["+i+"]["+j+"]"+" Y: "+yuvimage[i][j][0]+" Cr: "+yuvimage[i][j][1] +" Cb: "+yuvimage[i][j][0]);
+    		}
+    		System.out.println("");
+    }
+        
         double[][] Y = sperateY(yuvimage,width,height,minx,miny);
 //        printArray3D(yuvimage);
         double[][][][] separteBlock = separteBlock(Y);
         double[][][][] DCTBlock = DCTBlock(separteBlock);
-        int[][][][] dst = quantization(DCTBlock);
-        int[] linearblock = linearizeBlock(dst[8][8]);
-        for(int i = 0; i < linearblock.length;i++) {
-        		System.out.print(linearblock[i] + " ");
+        //print result of dct sub block[0][0]
+        System.out.println("result of dct sub block[0][0]");
+        for (int i = 0; i < 8; i++) {
+        		for (int j = 0; j < 8; j++) {
+        			System.out.print(DCTBlock[0][0][i][j] + " ");
+        			System.out.print("\t");
+        		}
+        	System.out.println("");
         }
-//        for (int i = 0; i < 8; i++) {
-//              for (int j = 0; j < 8; j++) {
-//            	  	System.out.print(dst[8][8][i][j] + " ");
-//              	  System.out.print("\t");
-//              }
-//              System.out.println("");
-//          }
-
+        
+        int[][][][] dst = quantization(DCTBlock);
+        
+        //print the quantization result of sub block [0][0]
+        System.out.println("quantization result of sub block[0][0]");
+        for (int i = 0; i < 8; i++) {
+              for (int j = 0; j < 8; j++) {
+            	  	System.out.print(dst[0][0][i][j] + " ");
+              	System.out.print("\t");
+              }
+              System.out.println("");
+        }
+        
+        int[] linearblock = linearizeBlock(dst[0][0]);
+        
 	}
 }
